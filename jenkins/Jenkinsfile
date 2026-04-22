@@ -1,0 +1,38 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = "mangeshbonde/nginx-co"
+        TAG = "v2"
+    }
+
+    stages {
+
+         stage('Clone Repository') {
+            steps {
+                git branch: 'main', url: 'https://github.com/mangeshbonde/ss-cicd-devops-pipeline.git'
+            }
+         }
+        
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t $DOCKER_IMAGE:$TAG .'
+            }
+        }
+
+        stage('Login to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    sh 'echo $PASS | docker login -u $USER --password-stdin'
+                }
+            }
+        }
+
+        stage('Push Image') {
+            steps {
+                sh 'docker push $DOCKER_IMAGE:$TAG'
+            }
+        }
+    }
+}
